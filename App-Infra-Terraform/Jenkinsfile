@@ -19,7 +19,7 @@ pipeline {
         }
         stage('Git Pulling') {
             steps {
-                git branch: 'master', url: 'https://github.com/Umerfarooqsyed/EKS-Terraform.git'
+                git branch: 'master', url: 'https://github.com/Umerfarooqsyed/MERN-Stack-End-to-End-Three-Tier-DevSecOps-Project.git'
             }
         }
         stage('Init') {

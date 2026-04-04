@@ -1,21 +1,9 @@
 terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.37.0"
-    }
+    backend "s3" {
+    bucket       = "mern-stack-end-to-end-three-tier-devsecops-project"
+    region       = "us-east-1"
+    key          = "eks-infra.tfstate"
+    use_lockfile = true
+    encrypt      = true
   }
 }
-
-provider "aws" {
-  region = var.aws-region
-}
-
-
-  # backend "s3" {
-  #   bucket         = "dev-aman-tf-bucket"
-  #   region         = "us-east-1"
-  #   key            = "eks/terraform.tfstate"
-  #   dynamodb_table = "Lock-Files"
-  #   encrypt        = true
-  # }
