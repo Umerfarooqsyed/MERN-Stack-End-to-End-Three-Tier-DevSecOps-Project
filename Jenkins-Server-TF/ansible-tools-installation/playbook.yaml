@@ -1,0 +1,173 @@
+---
+- name: Install DevOps Toolchain
+  hosts: all
+  become: yes
+
+  tasks:
+
+    # ---------------- JAVA 21 ----------------
+    - name: Install Java 21
+      apt:
+        name: openjdk-21-jdk
+        update_cache: yes
+        state: present
+
+    # ---------------- DOCKER ----------------
+    - name: Install Docker dependencies
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+        update_cache: yes
+
+    - name: Add Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.gpg
+        mode: '0644'
+
+    - name: Add Docker repo
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: |
+          deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        update_cache: yes
+        state: present
+
+    - name: Add users to docker group
+      user:
+        name: "{{ item }}"
+        groups: docker
+        append: yes
+      loop:
+        - jenkins
+        - ubuntu
+
+    - name: Restart Docker
+      service:
+        name: docker
+        state: restarted
+
+    - name: Fix docker.sock permissions
+      file:
+        path: /var/run/docker.sock
+        mode: '0777'
+
+    # ---------------- SONARQUBE ----------------
+    - name: Run SonarQube Container
+      docker_container:
+        name: sonar
+        image: sonarqube:lts-community
+        state: started
+        ports:
+          - "9000:9000"
+
+    # ---------------- AWS CLI ----------------
+    - name: Install unzip
+      apt:
+        name: unzip
+        state: present
+
+    - name: Download AWS CLI
+      get_url:
+        url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+        dest: /tmp/awscliv2.zip
+
+    - name: Unzip AWS CLI
+      unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp
+        remote_src: yes
+
+    - name: Install AWS CLI
+      command: /tmp/aws/install
+
+    # ---------------- KUBECTL ----------------
+    - name: Install kubectl
+      get_url:
+        url: https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    # ---------------- EKSCTL ----------------
+    - name: Install eksctl
+      unarchive:
+        src: https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_{{ ansible_system }}_amd64.tar.gz
+        dest: /usr/local/bin/
+        remote_src: yes
+
+    # ---------------- TERRAFORM ----------------
+    - name: Add Hashicorp GPG key
+      ansible.builtin.get_url:
+        url: https://apt.releases.hashicorp.com/gpg
+        dest: /usr/share/keyrings/hashicorp.gpg
+
+    - name: Add Hashicorp repo
+      copy:
+        dest: /etc/apt/sources.list.d/hashicorp.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com {{ ansible_lsb.codename }} main
+
+    - name: Install Terraform
+      apt:
+        name: terraform
+        update_cache: yes
+        state: present
+
+    # ---------------- TRIVY ----------------
+    - name: Install Trivy repo dependencies
+      apt:
+        name:
+          - wget
+          - apt-transport-https
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Add Trivy GPG key
+      ansible.builtin.get_url:
+        url: https://aquasecurity.github.io/trivy-repo/deb/public.key
+        dest: /usr/share/keyrings/trivy.gpg
+
+    - name: Add Trivy repo
+      copy:
+        dest: /etc/apt/sources.list.d/trivy.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb {{ ansible_lsb.codename }} main
+
+    - name: Install Trivy
+      apt:
+        name: trivy
+        update_cache: yes
+        state: present
+
+    # ---------------- HELM ----------------
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    # ---------------- JENKINS ----------------
+    - name: Add Jenkins key
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+        dest: /etc/apt/keyrings/jenkins.asc
+
+    - name: Add Jenkins repo
+      copy:
+        dest: /etc/apt/sources.list.d/jenkins.list
+        content: "deb [signed-by=/etc/apt/keyrings/jenkins.asc] https://pkg.jenkins.io/debian-stable binary/"
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        update_cache: yes
+        state: present

@@ -1,5 +1,5 @@
 locals {
-  org = "ap-medium"
+  org = "To-Do-App"
   env = var.env
 }
 
