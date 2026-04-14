@@ -1,6 +1,21 @@
-FROM node:14
+# build stage
+FROM node:20-alpine as build
+
 WORKDIR /usr/src/app
+
 COPY package*.json ./
-RUN npm install
+
+RUN npm ci
+
 COPY . .
-CMD [ "npm", "start" ]
+
+RUN npm run build
+
+# serve stage
+FROM nginx:alpine
+
+COPY --from=build /usr/src/app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
