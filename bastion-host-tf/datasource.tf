@@ -17,7 +17,7 @@ data "aws_ami" "ami" {
 data "aws_subnets" "public" {
   filter {
     name   = "tag:Name"
-    values = ["${local.env}-${local.org}-public*"]   
+    values = ["${local.env}-${local.org}-subnet-public*"]
   }
 }
 
@@ -25,14 +25,23 @@ data "aws_subnets" "public" {
 data "aws_subnets" "private" {
   filter {
     name   = "tag:Name"
-    values = ["${local.env}-${local.org}-private*"]  
+    values = ["${local.env}-${local.org}-subnet-private*"]
   }
 }
 
-data "aws_security_group" "eks-cluster-sg" {
+# data "aws_security_group" "eks-cluster-sg" {
+#   filter {
+#     name   = "tag:Name"
+#     values = ["${local.env}-${local.org}-eks-cluster-sg"]
+#   }
+# }
+
+
+data "aws_vpc" "find_vpc" {
   filter {
     name   = "tag:Name"
-    values = ["${local.env}-${local.org}-eks-cluster-sg"]   
+    values = ["${local.env}-${local.org}-vpc"]
   }
+
 }
 

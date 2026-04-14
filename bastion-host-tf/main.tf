@@ -1,26 +1,29 @@
 locals {
-  org = "To-Do-App"
-  env = "dev"
+  org        = "To-Do-App"
+  env        = "dev"
   aws-region = "us-east-1"
 }
 
 
 
 
+
+
 resource "aws_instance" "jump_server" {
-  ami                    = data.aws_ami.ami
-  instance_type          = "t3.micro"
-  region                 = local.aws-region
-  subnet_id              = data.aws_subnets.public.ids[0] 
-  vpc_security_group_ids = data.aws_security_group.eks-cluster-sg.id
-  iam_instance_profile   = "ec2-instance-profile"   
-  depends_on             = [module.eks] # ensures EKS module completes first
-  user_data = <<-EOF
+  ami                    = data.aws_ami.ami.image_id
+  instance_type          = "m7i-flex.large"
+  key_name               = "login_ec2"
+  vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+  subnet_id              = data.aws_subnets.public.ids[0]
+  iam_instance_profile   = "ec2-instance-profile"
+  user_data              = <<-EOF
               #!/bin/bash
               # Update system
-              sudo yum update -y
+              sudo apt update -y
+
 
               # Install AWS CLI
+              sudo apt install unzip
               curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
               unzip awscliv2.zip
               sudo ./aws/install

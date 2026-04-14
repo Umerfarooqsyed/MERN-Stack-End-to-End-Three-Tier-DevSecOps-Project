@@ -20,8 +20,16 @@ fi
 # --- Plugins List (IDs) ---
 PLUGINS=(
   aws-credentials
-  pipeline-aws         # put correct plugin id
+  pipeline-aws         
   terraform
+  docker-plugin
+  docker-java-api
+  docker-workflow
+  docker-commons
+  nodejs
+  dependency-check-jenkins-plugin
+  sonar
+  sonar-quality-gates
 )
 
 # --- Install Plugins ---
